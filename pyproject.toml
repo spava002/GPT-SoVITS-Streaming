@@ -3,7 +3,7 @@ requires = ["setuptools >= 61.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "GPT_SoVITS_Streaming"
+name = "GPT_SoVITS"
 dynamic = ["version"]
 description = "A GPT_SoVITS package with streaming support."
 readme = "README.md"
@@ -113,10 +113,10 @@ dependencies = [
     "threadpoolctl==3.5.0",
     "tokenizers==0.21.0",
     "tomlkit==0.13.2",
-    "torch==2.6.0+cu126",
-    "torchaudio==2.6.0+cu126",
+    "torch==2.6.0",
+    "torchaudio==2.6.0",
     "torchmetrics==1.6.1",
-    "torchvision==0.21.0+cu126",
+    "torchvision==0.21.0",
     "tqdm==4.67.1",
     "transformers==4.48.2",
     "typeguard==4.4.1",
