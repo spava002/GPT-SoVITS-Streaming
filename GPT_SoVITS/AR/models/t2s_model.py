@@ -995,8 +995,17 @@ class Text2SemanticDecoder(nn.Module):
                 if y.shape[1] == 0:
                     y = torch.concat([y, torch.zeros_like(samples)], dim=1)
                     print("bad zero prediction")
-                yield y[:, -curr_chunk_size:]
-                print(f"Done Yielding!")
+
+                if not (y == 1024).any():
+                    print("No EOS on last chunk. Manually placing.")
+                    y = torch.concat((y, torch.tensor([[1024]], device='cuda:0', dtype=torch.int32)), dim=1)
+
+                if curr_chunk_size > 0:
+                    yield y[:, -curr_chunk_size:]
+                else:
+                    yield y[:, -1:]
+                
+                # print(f"Done Yielding! Final Y: {y[:, :]}")
                 print(f"T2S Decoding EOS [{prefix_len} -> {y.shape[1]}]")
                 break
 

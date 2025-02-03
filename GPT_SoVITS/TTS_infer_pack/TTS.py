@@ -887,8 +887,10 @@ class TTS:
                         max_len=max_len,
                         repetition_penalty=repetition_penalty,
                     ):
-                        print(f"Inferred New: {ttime() - process_start_time}!")
-                        print(f"Prediction {generated_tokens}")
+                        # print(f"Inferred New: {ttime() - process_start_time}!")
+                        # print(f"Prediction {generated_tokens}")
+                        if last_chunk: # If last chunk is true, it means the last chunk has ALREADY been processed, so there is no more to process
+                            return
 
                         refer_audio_spec:torch.Tensor = [item.to(dtype=self.precision, device=self.configs.device) for item in self.prompt_cache["refer_spec"]]
 
@@ -896,10 +898,11 @@ class TTS:
                         total_tokens = sum([tokens.size(1) for tokens in generated_tokens_list])
                 
                         tokens_to_process = torch.cat(generated_tokens_list, dim=1)[:, :total_tokens] # uses full context for decoding
-                        
+
                         # Replace EOS token 1024 with 0
                         if (tokens_to_process == 1024).any():
                             tokens_to_process = tokens_to_process.masked_fill(tokens_to_process == 1024, 0)
+                            # print("This is now the last chunk to be processed. No more should come after.")
                             last_chunk = True
 
                         # Prepare data for decoding
@@ -924,7 +927,7 @@ class TTS:
                         start_index = len(audio_output) - search_length
                         if start_index < 0:
                             search_length = len(audio_output)
-                            print(f"search_length is too HIGH! Auto adjusted to {search_length} frames as the chunks are only {len(audio_output)} frames large")
+                            # print(f"search_length is too HIGH! Auto adjusted to {search_length} frames as the chunks are only {len(audio_output)} frames large")
                             start_index = 0
                         previous_center_index = zc_index2 # Start from previous zero crossing index and search outwards
                         max_offset = int(search_length // 2) # branches out in both ways
@@ -943,9 +946,8 @@ class TTS:
                                 search_window_size=search_window_size
                             )
                             audio_chunk = audio_output[:zc_index1]
-                            print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1}")
-                            print(f"_Audio Frag: {audio_output[zc_index1 - 10: zc_index1 + 10]}")
-                            yield audio_chunk
+                            # print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1}")
+                            # print(f"_Audio Frag: {audio_output[zc_index1 - 10: zc_index1 + 10]}")
                             first_chunk = False
                             zc_index2 = zc_index1
                         elif last_chunk:
@@ -956,31 +958,31 @@ class TTS:
                                 crossing_direction=crossing_direction
                                 )
                             audio_chunk = audio_output[zc_index1:]
-                            yield audio_chunk
                         else:
-                            print(f"ZC's are {zc_index1} and {zc_index2}")
-                            print(f"Searching With: {previous_center_index}, {max_offset}, {crossing_direction}")
+                            # print(f"ZC's are {zc_index1} and {zc_index2}")
+                            # print(f"Searching With: {previous_center_index}, {max_offset}, {crossing_direction}")
                             zc_index1 = find_matching_index(
                                 chunk=audio_output,
                                 center_index=previous_center_index, #Equivalent to the previously calculated zc1
                                 max_offset=max_offset,
                                 crossing_direction=crossing_direction
                                 )
-                            print(f"ZC 1: {zc_index1}")
+                            # print(f"ZC 1: {zc_index1}")
                             
-                            print(f"Searching with {start_index}, {search_length}")
+                            # print(f"Searching with {start_index}, {search_length}")
                             zc_index2, crossing_direction = find_zero_zone(
                                 chunk=audio_output,
                                 start_index=start_index,
                                 search_length=search_length,
                                 search_window_size=search_window_size
                             )
-                            print(f"ZC 2: {zc_index2} with crossing direction: {crossing_direction}")
-                            print(f"ZC 2 Midpoint is {audio_output[zc_index2]} with expanded view of {audio_output[zc_index2 - 10: zc_index2 + 10]}")
+                            # print(f"ZC 2: {zc_index2} with crossing direction: {crossing_direction}")
+                            # print(f"ZC 2 Midpoint is {audio_output[zc_index2]} with expanded view of {audio_output[zc_index2 - 10: zc_index2 + 10]}")
                             audio_chunk = audio_output[zc_index1:zc_index2]
-                            yield audio_chunk
-                            print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1} and ZC 2: {zc_index2}")
+                            # print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1} and ZC 2: {zc_index2}")
                             # keyboard.wait("enter")
+                        # print(f"Chunk Shape: {audio_chunk.shape}")
+                        yield audio_chunk
                 else:
                     pred_semantic_list, idx_list = self.t2s_model.model.infer_panel(
                         all_phoneme_ids,
