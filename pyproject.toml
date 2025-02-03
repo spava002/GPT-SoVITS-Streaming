@@ -137,3 +137,8 @@ Homepage = "https://github.com/spava002/GPT-SoVITS-Streaming"
 
 [tool.setuptools.packages.find]
 include = ["GPT_SoVITS"]
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu126"
+default = false
