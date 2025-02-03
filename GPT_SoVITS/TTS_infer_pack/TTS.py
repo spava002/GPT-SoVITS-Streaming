@@ -865,7 +865,6 @@ class TTS:
 
                 if stream_output:
                     from GPT_SoVITS.TTS_infer_pack.zero_crossing import find_zero_zone, find_matching_index
-                    import keyboard
                     zc_index1 = 0
                     zc_index2 = 0
                     crossing_direction = 0
@@ -887,8 +886,6 @@ class TTS:
                         max_len=max_len,
                         repetition_penalty=repetition_penalty,
                     ):
-                        # print(f"Inferred New: {ttime() - process_start_time}!")
-                        # print(f"Prediction {generated_tokens}")
                         if last_chunk: # If last chunk is true, it means the last chunk has ALREADY been processed, so there is no more to process
                             return
 
@@ -908,7 +905,6 @@ class TTS:
                         # Prepare data for decoding
                         _pred_semantic = tokens_to_process.unsqueeze(0)
                         phones = batch_phones[0].unsqueeze(0).to(self.configs.device)
-                        # print(f"Decoding: {_pred_semantic}")
                         
                         # Generate audio based on predictions
                         audio_output = self.vits_model.decode(
@@ -946,42 +942,31 @@ class TTS:
                                 search_window_size=search_window_size
                             )
                             audio_chunk = audio_output[:zc_index1]
-                            # print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1}")
-                            # print(f"_Audio Frag: {audio_output[zc_index1 - 10: zc_index1 + 10]}")
                             first_chunk = False
                             zc_index2 = zc_index1
                         elif last_chunk:
                             zc_index1 = find_matching_index(
                                 chunk=audio_output,
-                                center_index=previous_center_index, #Equivalent to the previously calculated zc1
+                                center_index=previous_center_index, # Equivalent to the previously calculated zc1
                                 max_offset=max_offset,
                                 crossing_direction=crossing_direction
                                 )
                             audio_chunk = audio_output[zc_index1:]
                         else:
-                            # print(f"ZC's are {zc_index1} and {zc_index2}")
-                            # print(f"Searching With: {previous_center_index}, {max_offset}, {crossing_direction}")
                             zc_index1 = find_matching_index(
                                 chunk=audio_output,
-                                center_index=previous_center_index, #Equivalent to the previously calculated zc1
+                                center_index=previous_center_index, # Equivalent to the previously calculated zc1
                                 max_offset=max_offset,
                                 crossing_direction=crossing_direction
                                 )
-                            # print(f"ZC 1: {zc_index1}")
-                            
-                            # print(f"Searching with {start_index}, {search_length}")
+
                             zc_index2, crossing_direction = find_zero_zone(
                                 chunk=audio_output,
                                 start_index=start_index,
                                 search_length=search_length,
                                 search_window_size=search_window_size
                             )
-                            # print(f"ZC 2: {zc_index2} with crossing direction: {crossing_direction}")
-                            # print(f"ZC 2 Midpoint is {audio_output[zc_index2]} with expanded view of {audio_output[zc_index2 - 10: zc_index2 + 10]}")
                             audio_chunk = audio_output[zc_index1:zc_index2]
-                            # print(f"Audio Frag: {audio_chunk} of size {audio_chunk.shape}\nZC 1: {zc_index1} and ZC 2: {zc_index2}")
-                            # keyboard.wait("enter")
-                        # print(f"Chunk Shape: {audio_chunk.shape}")
                         yield audio_chunk
                 else:
                     pred_semantic_list, idx_list = self.t2s_model.model.infer_panel(
