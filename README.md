@@ -9,6 +9,11 @@ This version introduces **streaming audio support**, enabling low-latency text-t
 
 ## How Can I Use It?
 
+⚠️**This project requires PyTorch with CUDA support.**⚠️
+Please install the appropriate version of PyTorch, TorchAudio, and TorchVision based on your CUDA version at: https://pytorch.org/
+
+---
+
 ## **Method 1: Clone the Repository**
 
 1. **Create a Clone of The Repo:**
