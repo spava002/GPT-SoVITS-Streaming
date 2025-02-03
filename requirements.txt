@@ -97,10 +97,7 @@ sympy==1.13.1
 threadpoolctl==3.5.0
 tokenizers==0.21.0
 tomlkit==0.13.2
-torch==2.6.0+cu126
-torchaudio==2.6.0+cu126
 torchmetrics==1.6.1
-torchvision==0.21.0+cu126
 tqdm==4.67.1
 transformers==4.48.2
 typeguard==4.4.1
