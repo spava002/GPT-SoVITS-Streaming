@@ -79,7 +79,6 @@ dependencies = [
     "pooch==1.8.2",
     "proces==0.1.7",
     "propcache==0.2.1",
-    "py3langid==0.3.0",
     "pycparser==2.22",
     "pydantic==2.10.6",
     "pydantic_core==2.27.2",
