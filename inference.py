@@ -7,8 +7,11 @@ from threading import Thread
 class TTS:
     def __init__(self):
         # Replace with your checkpoints and reference audio here
+        # Note: Using a venv may require updating the default paths provided here
         self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt"
         self.vits_checkpoint = "GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s2G2333k.pth"
+        self.bert_checkpoint = "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"
+        self.cnhuhbert_checkpoint = "GPT_SoVITS/pretrained_models/chinese-hubert-base"
         self.ref_audio = "audio4.wav"
 
         from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
@@ -18,6 +21,8 @@ class TTS:
                 "device": "cuda" if torch.cuda.is_available() else "cpu",
                 "t2s_weights_path": self.t2s_checkpoint,
                 "vits_weights_path": self.vits_checkpoint,
+                "bert_base_path": self.bert_checkpoint,
+                "cnhuhbert_base_path": self.cnhuhbert_checkpoint,
             }
         }
         
