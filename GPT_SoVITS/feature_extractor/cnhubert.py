@@ -16,7 +16,7 @@ from transformers import (
     HubertModel,
 )
 
-import utils
+import GPT_SoVITS.AR.utils
 import torch.nn as nn
 
 cnhubert_base_path = None
