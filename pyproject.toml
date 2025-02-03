@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "GPT_SoVITS_Streaming"
 dynamic = ["version"]
-description = "A GPT_SoVITS package with stream support."
+description = "A GPT_SoVITS package with streaming support."
 readme = "README.md"
 license = {text = "MIT License"}
 classifiers = [
