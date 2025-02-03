@@ -9,12 +9,16 @@ This version introduces **streaming audio support**, enabling low-latency text-t
 
 ## How Can I Use It?
 
-**⚠️ Make sure all requirements are installed before proceeding.**
-
 ## **Method 1: Clone the Repository**
 
+1. **Create a Clone of The Repo:**
 ```bash
 git clone https://github.com/spava002/GPT-SoVITS-Streaming.git
+```
+
+2. **Install Requirements:**
+```bash
+pip install -r requirements.txt
 ```
 
 ---
