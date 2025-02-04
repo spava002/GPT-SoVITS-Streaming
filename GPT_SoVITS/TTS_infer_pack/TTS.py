@@ -26,6 +26,19 @@ from GPT_SoVITS.tools.my_utils import load_audio
 from GPT_SoVITS.module.mel_processing import spectrogram_torch
 from GPT_SoVITS.TTS_infer_pack.text_segmentation_method import splits
 from GPT_SoVITS.TTS_infer_pack.TextPreprocessor import TextPreprocessor
+import GPT_SoVITS.utils as custom_utils
+from packaging import version 
+
+pytorch_version = version.parse(torch.__version__)
+# Only works with PyTorch >= 2.6
+if pytorch_version >= version.parse("2.6"):
+    from GPT_SoVITS.utils import HParams
+    # Add HParams to the safe globals, so we can load fine tuned models
+    torch.serialization.add_safe_globals([HParams])
+
+# Redirect 'utils' to the correct module path when loading
+sys.modules['utils'] = custom_utils
+
 language=os.environ.get("language","Auto")
 language=sys.argv[-1] if sys.argv[-1] in scan_language_list() else language
 i18n = I18nAuto(language=language)
@@ -304,7 +317,10 @@ class TTS:
     def init_vits_weights(self, weights_path: str):
         print(f"Loading VITS weights from {weights_path}")
         self.configs.vits_weights_path = weights_path
-        dict_s2 = torch.load(weights_path, map_location=self.configs.device)
+        if pytorch_version >= version.parse("2.6"):
+            dict_s2 = torch.load(weights_path, map_location=self.configs.device, weights_only=False)
+        else:
+            dict_s2 = torch.load(weights_path, map_location=self.configs.device)
         hps = dict_s2["config"]
         if dict_s2['weight']['enc_p.text_embedding.weight'].shape[0] == 322:
             self.configs.update_version("v1")
