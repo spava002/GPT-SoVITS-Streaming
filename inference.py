@@ -48,12 +48,14 @@ class TTS:
 
         args = {
             "text": text,
-            "text_lang": "en",
+            "text_lang": "ja",
             "ref_audio_path": self.ref_audio,
-            "temperature": 1,
+            "temperature": 0.8,
+            "top_k": 50,
+            "top_p": 0.9,
             "batch_size": 1,
             "stream_output": True,
-            "max_chunk_size": 10,
+            "max_chunk_size": 20,
         }
         
         if text:
@@ -77,6 +79,6 @@ tts = TTS()
 """
 Time is only for debugging purposes. If not needed, feel free to remove.
 Since this TTS model was built to be paired with LLM text streaming, we use a generating_text bool
-this bool signifies if we are receiving the last chunk of streamed text.
+this bool signifies if we are receiving the last chunk of streamed text (hence if we are generating anymore).
 """
 tts.synthesize("One day, a fierce storm rolled in, bringing heavy rain and strong winds that threatened to destroy the wheat crops.", time.time(), False)
