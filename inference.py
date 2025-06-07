@@ -7,7 +7,7 @@ from threading import Thread
 from GPT_SoVITS.TTS_infer_pack.TTS import TTS as GPTSoVITS_TTS, TTS_Config
 
 class TTS:
-    """_A simple class that defines an entry point for text to speech tasks._"""
+    """A simple class that defines an entry point for text to speech tasks."""
     def __init__(self):
         # Base Paths
         self.bert_checkpoint = "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"
@@ -16,6 +16,8 @@ class TTS:
         # Custom v2ProPlus
         self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka_EN_v2ProPlus-e15.ckpt"
         self.vits_checkpoint = "GPT_SoVITS/pretrained_models/v2Pro/ayaka/Ayaka_EN_v2ProPlus_e8_s2440.pth"
+        
+        # Base Paths for Each v2 Model If No Custom Model Available
         
         # Base v2ProPlus
         # self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/s1v3.ckpt"
@@ -44,9 +46,11 @@ class TTS:
         
         self.tts = GPTSoVITS_TTS(TTS_Config(self.config))
         
+        # Reference Audios (Optional For Better Tuning To Target Voice)
         aux_ref_audios_path = "audio/ayaka/aux_ref_audio"
         self.aux_ref_audios = [f"{aux_ref_audios_path}/{file_name}" for file_name in os.listdir(aux_ref_audios_path)]
         
+        # Audio Streaming Setup
         self.stream_thread: Thread = None
         self.stream = sd.OutputStream(samplerate=32000, channels=1, dtype="float32")
         self.audio_queue = Queue()
@@ -57,7 +61,7 @@ class TTS:
     
     
     def audio_stream(self):
-        """_Handles audio playback from synthesized data._"""
+        """Handles audio playback from synthesized data."""
         self.stream.start()
         self.streaming_audio = True
         while True:
@@ -70,21 +74,20 @@ class TTS:
     
     
     def synthesize(self, text: str, text_lang: str = "en", speed_factor: float = 1, is_warmup: bool = False):
-        """_Entry point to synthesizing text into speech._
+        """Entry point to synthesizing text into speech.
 
         Args:
-            text (_str_, required): _The text to synthesize into speech._
-            text (_str_, optional): _The language of the text to synthesize into speech._ Defaults to english ("en").
-            speed_factor (_float_, optional): _The speed of the synthesized audio. Usually left alone unless the speech needs to be sped up/slowed down._ Defaults to 1.
-            is_final (bool, optional): _Whether this call to synthesize is the final one. Useful when receiving streams of input, to know when to stop the stream thread. If only using for single use synthesis tasks, leave this alone._ Defaults to True.
-            is_warmup (bool, optional): _Marks whether this call to synthesize is for warming up the model. Usually only called when initializing the model for inference._ Defaults to False.
+            text (str, required): The text to synthesize into speech.
+            text_lang (str, optional): The language of the text to synthesize into speech. Defaults to english ("en").
+            speed_factor (float, optional): The speed of the synthesized audio. Usually left alone unless the speech needs to be sped up/slowed down. Defaults to 1.
+            is_warmup (bool, optional): Marks whether this call to synthesize is for warming up the model. Usually only called when initializing the model for inference. Defaults to False.
         """
 
         args = {
             "text": text,
             "text_lang": text_lang,
             "ref_audio_path": self.ref_audio,
-            "aux_ref_audio_paths": self.aux_ref_audios if self.aux_ref_audios else None,
+            "aux_ref_audio_paths": self.aux_ref_audios,
             "prompt_text": "Don't worry. Now that I've experienced the event once already, I won't be easily frightened. I'll see you later. Have a lovely chat with your friend.",
             "prompt_lang": "en",
             "batch_size": 1,
@@ -95,7 +98,7 @@ class TTS:
             "fragment_interval": 0.01, # This doesnt do anything with v2
             "seed": 42,
             "streaming": True,
-            # Helps get the first chunk of audio out faster and then adjusts to a more reasonable chunk size
+            # Helps get the first chunk of audio out faster and then adjusts to a more reasonable chunk size over time
             "initial_chunk_size": 10,
             "chunk_increase_rate": 5,
             "max_chunk_size": 20,
@@ -122,4 +125,5 @@ class TTS:
 
 # Usage
 tts = TTS()
-tts.synthesize("Earth is the third planet from the Sun and the only known astronomical object to harbor life, characterized by its dynamic systems including oceans, atmosphere, and tectonic plates that continuously reshape its surface.")
+text = "Earth is the third planet from the Sun and the only known astronomical object to harbor life, characterized by its dynamic systems including oceans, atmosphere, and tectonic plates that continuously reshape its surface."
+tts.synthesize(text, text_lang="en", speed_factor=1)
