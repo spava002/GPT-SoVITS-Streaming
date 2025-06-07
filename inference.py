@@ -13,15 +13,19 @@ class TTS:
         self.bert_checkpoint = "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"
         self.cnhuhbert_checkpoint = "GPT_SoVITS/pretrained_models/chinese-hubert-base"
         
-        # Custom Trained (v3)
-        # self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka-e15.ckpt"
-        # self.vits_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka_e3_s1848_l32.pth"
+        # Custom v2ProPlus
+        self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka_EN_v2ProPlus-e15.ckpt"
+        self.vits_checkpoint = "GPT_SoVITS/pretrained_models/v2Pro/ayaka/Ayaka_EN_v2ProPlus_e8_s2440.pth"
         
-        # v3
-        self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/s1v3.ckpt"
-        self.vits_checkpoint = "GPT_SoVITS/pretrained_models/s2Gv3.pth"
+        # Base v2ProPlus
+        # self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/s1v3.ckpt"
+        # self.vits_checkpoint = "GPT_SoVITS/pretrained_models/v2Pro/s2Gv2ProPlus.pth"
         
-        # v2
+        # Base v2Pro
+        # self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/s1v3.ckpt"
+        # self.vits_checkpoint = "GPT_SoVITS/pretrained_models/v2Pro/s2Gv2Pro.pth"
+        
+        # Base v2
         # self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt"
         # self.vits_checkpoint = "GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s2G2333k.pth"
         
@@ -43,24 +47,29 @@ class TTS:
         aux_ref_audios_path = "audio/ayaka/aux_ref_audio"
         self.aux_ref_audios = [f"{aux_ref_audios_path}/{file_name}" for file_name in os.listdir(aux_ref_audios_path)]
         
+        self.stream_thread: Thread = None
+        self.stream = sd.OutputStream(samplerate=32000, channels=1, dtype="float32")
         self.audio_queue = Queue()
         self.streaming_audio = False
 
         # Runs a quick warmup to get everything setup for fast inference in the following calls to synthesize
         self.synthesize("Hello world.", is_warmup=True)
     
-    def audio_stream(self, sr: int, start_time: float):
-        """_Handles audio playback from synthesized data._"""
-        with sd.OutputStream(samplerate=sr, channels=1, dtype="float32") as stream:
-            while True:
-                _, audio_data = self.audio_queue.get()
-                if audio_data is None:
-                    break
-                stream.write(audio_data)
-            print(f"Stream Thread Complete ({time.time() - start_time:.2f}s)")
-            self.streaming_audio = False
     
-    def synthesize(self, text: str, text_lang: str = "en", speed_factor: float = 1, is_final: bool = True, is_warmup: bool = False):
+    def audio_stream(self):
+        """_Handles audio playback from synthesized data._"""
+        self.stream.start()
+        self.streaming_audio = True
+        while True:
+            audio_data = self.audio_queue.get()
+            if audio_data is None:
+                self.stream.stop()
+                self.streaming_audio = False
+                return
+            self.stream.write(audio_data)
+    
+    
+    def synthesize(self, text: str, text_lang: str = "en", speed_factor: float = 1, is_warmup: bool = False):
         """_Entry point to synthesizing text into speech._
 
         Args:
@@ -75,7 +84,7 @@ class TTS:
             "text": text,
             "text_lang": text_lang,
             "ref_audio_path": self.ref_audio,
-            "aux_ref_audio_paths": self.aux_ref_audios,
+            "aux_ref_audio_paths": self.aux_ref_audios if self.aux_ref_audios else None,
             "prompt_text": "Don't worry. Now that I've experienced the event once already, I won't be easily frightened. I'll see you later. Have a lovely chat with your friend.",
             "prompt_lang": "en",
             "batch_size": 1,
@@ -85,40 +94,32 @@ class TTS:
             "speed_factor": speed_factor,
             "fragment_interval": 0.01, # This doesnt do anything with v2
             "seed": 42,
-            "stream_output": True,
-            "max_chunk_size": 30,
-            # "sample_steps": 32, # Exclusive to v3
-            # "super_sampling": True, # Exclusive to v3
-            # "text_split_method": "cut5"
+            "streaming": True,
+            # Helps get the first chunk of audio out faster and then adjusts to a more reasonable chunk size
+            "initial_chunk_size": 10,
+            "chunk_increase_rate": 5,
+            "max_chunk_size": 20,
         }
         
-        
+        start_time = time.time()
+        print(f"Synthesis Start ({time.time() - start_time:.2f}s)")
         if text:
-            generator = self.tts.run(args)
-            start_time = time.time()
-            print(f"Synthesis Start ({time.time() - start_time:.2f}s)")
-            while True:
-                try:
-                    audio_data = next(generator)
+            for _, audio_data in self.tts.run(args):
+                if not is_warmup:   
                     if not self.streaming_audio:
-                        sr, _ = audio_data
-                        Thread(target=self.audio_stream, daemon=True, args=(sr, start_time,)).start()
-                        self.streaming_audio = True
-                    if not is_warmup:
-                        self.audio_queue.put(audio_data)
-                        print(f"Queueing Audio Data ({time.time() - start_time:.2f}s)")
-                except StopIteration:
-                    break
+                        self.stream_thread = Thread(target=self.audio_stream)
+                        self.stream_thread.start()
+                    self.audio_queue.put(audio_data)
+                    print(f"Queueing Audio Data ({time.time() - start_time:.2f}s) Of Length {audio_data.shape[0] / 32000}s")
 
         if is_warmup:
             print(f"TTS Warmup Completed ({time.time() - start_time:.2f}s)")
-        elif is_final:
-            # Add a sentinel value to signify to end the stream thread once its reached
-            self.audio_queue.put((None, None))
+        else:
+            self.audio_queue.put(None)
+            print(f"Last Chunk. Inserting Sentinel Value.")
+            self.stream_thread.join()
+            print(f"Stream Thread Complete ({time.time() - start_time:.2f}s)")
 
 # Usage
 tts = TTS()
-tts.synthesize("Earth is the third planet from the Sun and the only known astronomical object to harbor life, characterized by its dynamic systems including oceans, atmosphere, and tectonic plates that continuously reshape its surface. Its unique position in the habitable zone of our solar system, along with its protective magnetic field and diverse ecosystems, has allowed for the evolution of millions of species over approximately 4.5 billion years. Despite covering only a fraction of the universe, Earth remains our irreplaceable home—a remarkable blue marble suspended in the vastness of space that continues to reveal its secrets through scientific discovery.")
-# Wait until the streaming thread finishes playback before leaving the main thread since its a daemon thread
-while tts.streaming_audio:
-    time.sleep(0.1)
+tts.synthesize("Earth is the third planet from the Sun and the only known astronomical object to harbor life, characterized by its dynamic systems including oceans, atmosphere, and tectonic plates that continuously reshape its surface.")

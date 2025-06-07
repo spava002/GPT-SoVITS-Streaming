@@ -77,7 +77,7 @@ except Exception:
     pass
 
 
-from GPT_SoVITS.text.symbols import punctuation
+from text.symbols import punctuation
 
 # Regular expression matching Japanese without punctuation marks:
 _japanese_characters = re.compile(

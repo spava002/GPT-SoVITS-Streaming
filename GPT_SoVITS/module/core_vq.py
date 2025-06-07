@@ -179,7 +179,7 @@ class EuclideanCodebook(nn.Module):
         return embed_ind.view(*shape[:-1])
 
     def dequantize(self, embed_ind):
-        quantize = F.embedding(embed_ind.long(), self.embed)
+        quantize = F.embedding(embed_ind, self.embed)
         return quantize
 
     def encode(self, x):
