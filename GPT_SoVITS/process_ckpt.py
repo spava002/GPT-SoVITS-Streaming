@@ -145,6 +145,11 @@ def load_sovits_new(sovits_path):
     # Append the venv root path to the sovits path
     sovits_path = get_venv_site_packages_path(sovits_path)
         
+    # Set the current path to this file to that the utils/Hparams can be loaded
+    gpt_sovits_dir = os.path.join(os.path.dirname(__file__))
+    if gpt_sovits_dir not in sys.path:
+        sys.path.append(gpt_sovits_dir)
+        
     f = open(sovits_path, "rb")
     meta = f.read(2)
     if meta != "PK":
