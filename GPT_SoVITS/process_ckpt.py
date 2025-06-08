@@ -86,8 +86,25 @@ hash_pretrained_dict = {
 }
 import hashlib
 
+import sys
+
+def get_venv_site_packages_path(sovits_path):
+    root_dir = os.getcwd()
+
+    local_sovits_path = os.path.join(root_dir, sovits_path)
+    # Check if the current sovits path is valid
+    if os.path.isfile(local_sovits_path):
+        sovits_path = local_sovits_path
+    else:
+        # If the current sovits path is not valid, fallback to venv site-packages path
+        site_packages_path = next(p for p in sys.path if 'site-packages' in p)
+        sovits_path = os.path.join(site_packages_path, sovits_path)
+    return sovits_path
+
 
 def get_hash_from_file(sovits_path):
+    sovits_path = get_venv_site_packages_path(sovits_path)
+        
     with open(sovits_path, "rb") as f:
         data = f.read(8192)
     hash_md5 = hashlib.md5()
@@ -125,6 +142,9 @@ def get_sovits_version_from_path_fast(sovits_path):
 
 
 def load_sovits_new(sovits_path):
+    # Append the venv root path to the sovits path
+    sovits_path = get_venv_site_packages_path(sovits_path)
+        
     f = open(sovits_path, "rb")
     meta = f.read(2)
     if meta != "PK":

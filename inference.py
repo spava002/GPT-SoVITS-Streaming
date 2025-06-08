@@ -15,7 +15,7 @@ class TTS:
         
         # Custom v2ProPlus
         self.t2s_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka_EN_v2ProPlus-e15.ckpt"
-        self.vits_checkpoint = "GPT_SoVITS/pretrained_models/v2Pro/ayaka/Ayaka_EN_v2ProPlus_e8_s2440.pth"
+        self.vits_checkpoint = "GPT_SoVITS/pretrained_models/ayaka/Ayaka_EN_v2ProPlus_e8_s2440.pth"
         
         # Base Paths for Each v2 Model If No Custom Model Available
         
