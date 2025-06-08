@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools >= 61.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GPT_SoVITS"
+dynamic = ["version"]
+description = "An extension of the original GPT_SoVITS package with streaming support."
+readme = "README.md"
+license = {text = "MIT License"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "numpy==2.1.2",
+  "tqdm",
+  "cn2an",
+  "fast_langdetect",
+  "split_lang",
+  "jieba",
+  "ffmpeg-python",
+  "gradio",
+  "pandas",
+  "x-transformers",
+  "matplotlib",
+  "pytorch_lightning",
+  "peft",
+  "pyyaml",
+  "librosa",
+  "pypinyin",
+  "jieba_fast",
+  "wordsegment",
+  "g2p_en",
+  "pyopenjtalk",
+  "sounddevice",
+]
+
+[project.urls]
+Homepage = "https://github.com/spava002/GPT-SoVITS-Streaming"
+
+[project.scripts]
+"gpt_sovits_api" = "GPT_SoVITS.api_v2:main"
+
+[tool.setuptools.packages.find]
+include = ["GPT_SoVITS"]
