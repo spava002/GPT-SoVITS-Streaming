@@ -1,9 +1,10 @@
-# GPT-SoVITs with Streaming Support for v2 and v3
+# GPT-SoVITs with Streaming Support
 
 This repository is an **extension of the open-source GPT-SoVITs** project originally provided by [RVC-Boss](https://github.com/RVC-Boss).
 
 ## What's New?
-This version introduces **streaming audio support**, enabling low-latency text-to-speech (TTS) capabilities. Whether you're working on real-time applications or other TTS tasks, this enhancement makes GPT-SoVITs more versatile and powerful.
+- This version introduces **streaming audio support**, enabling low-latency text-to-speech (TTS) capabilities. Whether you're working on real-time applications or other TTS tasks, this enhancement makes GPT-SoVITs more versatile and powerful.
+- Support for the latest v2Pro and v2ProPlus models is now available.
 
 ## How Can I Use It?
 
