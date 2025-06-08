@@ -49,7 +49,7 @@ pip install -r requirements.txt
 3. **Install the Repository:**
 
    ```bash
-   pip install git+https://github.com/spava002/GPT-SoVITS-v3-Streaming.git
+   pip install git+https://github.com/spava002/GPT-SoVITS-Streaming.git
    ```
 
 ---
