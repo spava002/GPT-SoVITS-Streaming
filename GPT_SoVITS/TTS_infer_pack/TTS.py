@@ -1238,7 +1238,11 @@ class TTS:
                         early_stop_num=self.configs.hz * self.configs.max_sec,
                         max_len=max_len,
                         repetition_penalty=repetition_penalty,
-                    ):        
+                    ):       
+                        # If for some reason we continue generating tokens after the last chunk has been found, break the loop
+                        if last_chunk:
+                            print("Last Chunk Was Already Processed, Breaking Out!")
+                            break
                         # print(f"Token List Generated ({time.time() - start_time:.2f}s) Of Shape {pred_semantic_chunk.shape}")
                         # Prepare input for decoding
                         phones = batch_phones[0].unsqueeze(0).to(self.configs.device)
@@ -1248,10 +1252,10 @@ class TTS:
                         tokens_to_process = torch.cat(generated_tokens_list, dim=1)[:, :total_tokens]
                         
                         eos_token = self.t2s_model.model.EOS
-                        if (tokens_to_process == eos_token).any():
+                        eos_found = (tokens_to_process == eos_token).any()
+                        if eos_found:
                             tokens_to_process = tokens_to_process.masked_fill(tokens_to_process == eos_token, 0)
                             last_chunk = True
-                            first_chunk = False
                             
                         pred_semantic = tokens_to_process.unsqueeze(0)
 
@@ -1290,6 +1294,12 @@ class TTS:
                         if max_val > 1.0:
                             audio_output /= max_val
                         
+                        # In the case that the first chunk is the last chunk, yield the audio and break out of the loop
+                        if first_chunk and eos_found:
+                            print(f"EOS Found In First Chunk, Yielding Audio And Breaking Out Of Loop!")
+                            yield output_sr, audio_output
+                            break
+                        
                         # Zero-cross splitting
                         start_index = len(audio_output) - search_length
                         if start_index < 0:
@@ -1306,6 +1316,7 @@ class TTS:
                                 search_length
                             )
                             audio_chunk = audio_output[:zc_index1]
+                            # print(f"(First Chunk) ZC Index 1: {zc_index1} | Audio Output Length: {audio_output.shape[0]}")
                             first_chunk = False
                             zc_index2 = zc_index1
                         elif last_chunk:
@@ -1316,6 +1327,7 @@ class TTS:
                                 crossing_direction
                             )
                             audio_chunk = audio_output[zc_index1:]
+                            # print(f"(Last Chunk) ZC Index 1: {zc_index1} | Audio Output Length: {audio_output.shape[0]}")
                         else:
                             zc_index1 = find_matching_index(
                                 audio_output, 
@@ -1329,6 +1341,7 @@ class TTS:
                                 search_length
                             )
                             audio_chunk = audio_output[zc_index1:zc_index2]
+                            # print(f"(Mid Chunk) ZC Index 1: {zc_index1} | ZC Index 2: {zc_index2} | Audio Output Length: {audio_output.shape[0]}")
                         yield output_sr, audio_chunk
                     self.empty_cache()
                 else:
