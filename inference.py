@@ -125,7 +125,7 @@ class TTS:
         
         start_time = time.time()
         print(f"Synthesis Start ({time.time() - start_time:.2f}s)")
-        # i = 0
+
         if text:
             for sample_rate, audio_chunk in self.tts.run(args):
                 if is_warmup:
