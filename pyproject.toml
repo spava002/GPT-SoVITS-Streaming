@@ -69,3 +69,6 @@ Homepage = "https://github.com/spava002/GPT-SoVITS-Streaming"
 
 [tool.setuptools.packages.find]
 include = ["GPT_SoVITS*"]
+
+[tool.setuptools.package-data]
+"*" = ["*"]
