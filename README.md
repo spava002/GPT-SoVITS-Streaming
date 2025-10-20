@@ -1,3 +1,32 @@
+## Editor's Note
+
+This project is a fork of the original [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) project, building upon its foundation with several key improvements and enhancements:
+
+### Improvements
+
+#### Enhanced Streaming Capabilities
+- **Token-level streaming**: Stream audio generation by tokens rather than waiting for complete sentences
+- **Reduced latency**: Receive the first audio chunk much sooner, dramatically improving perceived responsiveness
+
+#### Simplified Setup & Distribution
+- **pip-installable package**: Install with a single command instead of manual setup
+- **Automatic weight management**: Hugging Face model weights are automatically downloaded if missing
+
+#### Examples
+- **Single-run examples**: Quick-start code for one-off voice synthesis tasks
+- **Streaming examples**: Quick-start code demonstrating real-time streaming capabilities
+
+## Installation
+```bash
+pip install git+https://github.com/spava002/GPT-SoVITS-Streaming.git
+```
+
+### Credits
+
+This project builds upon the excellent work of the original GPT-SoVITS team. All core functionality and model architecture credit goes to the original authors.
+
+<br><br>
+
 <div align="center">
 
 <h1>GPT-SoVITS-WebUI</h1>
