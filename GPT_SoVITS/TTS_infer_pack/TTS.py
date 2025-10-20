@@ -30,8 +30,8 @@ from peft import LoraConfig, get_peft_model
 from GPT_SoVITS.process_ckpt import get_sovits_version_from_path_fast, load_sovits_new
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 
-from tools.audio_sr import AP_BWE
-from tools.i18n.i18n import I18nAuto, scan_language_list
+from GPT_SoVITS.tools.audio_sr import AP_BWE
+from GPT_SoVITS.tools.i18n.i18n import I18nAuto, scan_language_list
 from GPT_SoVITS.TTS_infer_pack.text_segmentation_method import splits
 from GPT_SoVITS.TTS_infer_pack.TextPreprocessor import TextPreprocessor
 from GPT_SoVITS.sv import SV
