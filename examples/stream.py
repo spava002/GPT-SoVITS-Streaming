@@ -24,7 +24,7 @@ tts_pipeline = TTS(tts_config)
 
 inputs = {
     "text": "", # your text to be synthesized
-    "text_lang": "en", # your text's language
+    "text_lang": "", # your text's language
     "ref_audio_path": "", # your audio file path
     "prompt_text": "", # your audio file's transcription
     "prompt_lang": "", # your audio file's language
