@@ -3,7 +3,6 @@ import soundfile as sf
 
 cwd = os.getcwd()
 sys.path.append(cwd)
-sys.path.append(os.path.join(cwd, "GPT_SoVITS"))
 
 from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
 
