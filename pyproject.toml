@@ -67,5 +67,5 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/spava002/GPT-SoVITS-Streaming"
 
-[tool.setuptools]
+[tool.setuptools.packages.find]
 packages = ["GPT_SoVITS"]
