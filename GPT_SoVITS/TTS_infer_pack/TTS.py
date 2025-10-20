@@ -373,7 +373,7 @@ class TTS_Config:
         print(f"Downloading missing weights from Hugging Face to local pretrained models directory...")
         snapshot_download(
             repo_id="lj1995/GPT-SoVITS", 
-            local_dir=os.path.join(now_dir, "GPT_SoVITS/pretrained_models"), 
+            local_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pretrained_models"),
             ignore_patterns=["*.md", ".git*"]
         )
 
