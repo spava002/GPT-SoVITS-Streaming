@@ -21,6 +21,8 @@ This project is a fork of the original [GPT-SoVITS](https://github.com/RVC-Boss/
 pip install git+https://github.com/spava002/GPT-SoVITS-Streaming.git
 ```
 
+Ensure you are using the correct version of torch (and with cuda support if using a gpu) based on the tested environments listed below. Installations can be found [here](https://pytorch.org/get-started/previous-versions/).
+
 ### Credits
 
 This project builds upon the excellent work of the original GPT-SoVITS team. All core functionality and model architecture credit goes to the original authors.
