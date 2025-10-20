@@ -4,8 +4,8 @@ import re
 import cn2an
 import ToJyutping
 
-from text.symbols import punctuation
-from text.zh_normalization.text_normlization import TextNormalizer
+from GPT_SoVITS.text.symbols import punctuation
+from GPT_SoVITS.text.zh_normalization.text_normlization import TextNormalizer
 
 normalizer = lambda x: cn2an.transform(x, "an2cn")
 
