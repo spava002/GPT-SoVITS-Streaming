@@ -1,0 +1,109 @@
+Train From Scratch
+
+The whole training pipeline is divided into three stages:
+
+1）token encoder and decoder （s2）
+2）GPT model （s1）
+3）fine tune s2 decoder while freezing s2 encoder (additional)
+
+The open sourced base model is only trained on the first two stages.
+
+Difference between webui fine tune training codes and base model training codes
+1）webui fine tune training decreases the leanring rate of text embedding module, while base model training not
+2）webui fine tune training freezes the VQ encoder while base model training not. You can modify it in the configs/s2.json (freeze_quantizer)
+3）No other difference which influences the results. Train-cli codes can easily be reproduced by reading webui-fine-tuning codes (environment variables and sys arguments)
+
+Tips:
+Training data length: 1000 hours Chinese + 700 hours English + 300 hours Japanese
+2 stages training from scratch (remember to set sovits_encoder to freeze_false)
+The training data for GPT should pay more attention to the alignment between text and speech, especially in terms of pauses and punctuation, as well as filtering stutters and repetitive speech. For SoVITS training data, better audio quality is better.
+
+____________________________________________
+
+How to Train the Models with Other Languages
+
+1. Currently, the base model has only seen Chinese, Japanese, English, Korean and Cantonese. Therefore, if you need to train a new language, you need to have at least 100 hours of training data for the new language. Because it is a base model, it is better to have more. At least 100 hours new languages training datasets.
+2. text cleaner codes with new languages are needed
+3. GPT_SoVITS/text/symbols.py you need to add the phoneme symbols of the new language
+4. You need to prepare a g2p function in a new language. More info can be found at GPT_SoVITS/text/cleaner.py
+5. If you fine-tune a new language based on an existing base model, the amount of training data can be reduced as appropriate to use other data bands of the base model; but be aware that the text embedding will be lost when loading the model because the number of symbols has changed. However, the current code also supports this, and you can also fine-tune the weights of the base model to add its shape.
+
+For reference only, you need to pay attention to the specific location of the phoneme emb splicing:
+
+import torch
+#### 迁移gpt模型的embedding层,插入两个新的token
+dict = torch.load(r"D:\pyprojs\GPT-SoVITSs\fork\GPT-SoVITS\GPT_SoVITS\pretrained_models\s1bert25hz-2kh-longer-epoch=68e-step=50232-2.ckpt",map_location=torch.device('cpu'))
+dict["weight"]["model.ar_text_embedding.word_embeddings.weight"].shape
+# 0~94保持不动，95~向后移动两位，新的95 96随机初始化
+# 一共512列，embedding_dim=5
+first_part = dict["weight"]["model.ar_text_embedding.word_embeddings.weight"][:95,:]
+second_part = dict["weight"]["model.ar_text_embedding.word_embeddings.weight"][95:-2,:]
+new_weight = torch.cat([first_part,second_part, torch.randn(2, 512)],dim=0)
+dict["weight"]["model.ar_text_embedding.word_embeddings.weight"] = new_weight
+torch.save(dict,r"D:\pyprojs\GPT-SoVITSs\fork\GPT-SoVITS\GPT_SoVITS\pretrained_models\s1bert25hz-hs_model.ckpt")
+import torch
+dict2 = torch.load(r"D:\pyprojs\GPT-SoVITSs\fork\GPT-SoVITS\GPT_SoVITS\pretrained_models\s2G488k-legacy.pth",map_location=torch.device('cpu'))
+dict2["weight"]["enc_p.text_embedding.weight"].shape
+# 0~94保持不动，95~向后移动两位，新的95 96随机初始化
+first_part = dict2["weight"]["enc_p.text_embedding.weight"][:95,:]
+second_part = dict2["weight"]["enc_p.text_embedding.weight"][95:,:]
+new_weight = torch.cat([first_part,torch.zeros(2,192),second_part],dim=0)
+dict2["weight"]["enc_p.text_embedding.weight"] = new_weight
+torch.save(dict2,r"D:\pyprojs\GPT-SoVITSs\fork\GPT-SoVITS\GPT_SoVITS\pretrained_models\s2G488k.pth")
+
+6. Modify the phoneme_vocab_size in the GPT_SoVITS/configs/s1longer-v2.yaml file to the latest dimension
+7. Modify the Faster Whisper model's lang in asr_dict in tools/asr/config.py to support your language
+8. Modify all places in the project where the original base is used, and change them to your new base model path
+9. Modify clean_text in GPT_SoVITS/text/cleaner.py and add your language to language_module_map
+10. When reasoning about a new language, the web UI for parallel reasoning needs to be modified in several places:
+    - GPT_SoVITS/inference_webui_fast.py (in dict_language_v2)
+    - GPT_SoVITS/TTS_infer_pack/TextPreprocessor.py (in TextPreprocessor class)
+    - GPT_SoVITS/TTS_infer_pack/TTS.py (in TTS_Config)
+
+____________________________________________
+
+Cross-Language Ability of Different Training Sets
+
+1. Cross-lingual Definition:
+Reference audio, reference text = Language A; text to be synthesized = Language B, where A != B.
+OR
+2. Training set = Language A; text to be synthesized = Language B, where A != B.
+
+Currently, we do not consider the selection of reference audio with voices outside the training set, so 1 and 2 are considered equivalent for now.
+
+____________________________________________
+
+The base model supports five languages, so can the model cross languages when it's fine-tuned?
+
+1. If the fine-tuning training set is relatively small (e.g., 1-30 minutes): Training with any Language A allows inference across the texts of all five languages because the base model possesses cross-language capabilities.
+2. If the fine-tuning training set is relatively large, then the cross-language capabilities of the base model may be overwritten by the fine-tuning set. For example:
+3. If the training set includes languages A, B, and C, then the voice (and its corresponding reference audio) can cross languages among A, B, and C, but the cross-language ability outside of these (D and E) is lost.
+4. If the training set includes only Language A, then the model will not have cross-language capabilities.
+
+____________________________________________
+
+The TTS Model's Structure
+
+Train:
+preprocess_stage1:wav->hubert,text->bert
+stage1: hubert->token----(+text+reference_encoder_embedding)---->wav (sovits)
+preprocess_stage2:hubert->token
+stage2: tokens+bert+text->tokens (gpt (More accurately, it is Soundstorm stage_AR.))
+
+Finetune:
+preprocess_stage:wav->hubert->token,text->bert
+stage1: token------(+text+reference_encoder_embedding)----->wav (sovits_decoder)
+stage2: tokens+bert+text->tokens (gpt)
+
+Inference:
+text->bert
+prompt_wav->prompt_token (sovits_encoder)
+prompt_token+todo_text+todo_bert->completed token (gpt)
+completed token+todo_text+reference_encoder_embedding->output vocal (sovits_decoder)
+
+____________________________________________
+
+Some Random Notes from the Development Team of the TTS Model
+
+1. GPT training requires adding the phoneme_vocab_size parameter to the yaml configuration file if 512 phonemes are insufficient.
+2. You can freeze the token encoder of stage2, use the existed pretrained base model to extract the tokens to train s1, and then fine tune the stage2 decoder using your other languages g2p.
