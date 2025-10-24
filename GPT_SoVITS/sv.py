@@ -7,10 +7,14 @@ sv_path = "GPT_SoVITS/pretrained_models/sv/pretrained_eres2netv2w24s4ep4.ckpt"
 from GPT_SoVITS.eres2net.ERes2NetV2 import ERes2NetV2
 import GPT_SoVITS.eres2net.kaldi as Kaldi
 
+from pathlib import Path
+
+root_dir = Path(__file__).parent.parent
 
 class SV:
     def __init__(self, device, is_half):
-        pretrained_state = torch.load(sv_path, map_location="cpu", weights_only=False)
+        local_sv_path = str(root_dir / sv_path)
+        pretrained_state = torch.load(local_sv_path, map_location="cpu", weights_only=False)
         embedding_model = ERes2NetV2(baseWidth=24, scale=4, expansion=4)
         embedding_model.load_state_dict(pretrained_state)
         embedding_model.eval()

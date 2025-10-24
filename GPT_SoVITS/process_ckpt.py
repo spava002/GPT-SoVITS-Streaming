@@ -6,6 +6,10 @@ import os
 import torch
 from GPT_SoVITS.tools.i18n.i18n import I18nAuto
 
+from pathlib import Path
+
+root_dir = Path(__file__).parent.parent
+
 i18n = I18nAuto()
 
 
@@ -90,6 +94,7 @@ import hashlib
 
 
 def get_hash_from_file(sovits_path):
+    sovits_path = str(root_dir / sovits_path)
     with open(sovits_path, "rb") as f:
         data = f.read(8192)
     hash_md5 = hashlib.md5()

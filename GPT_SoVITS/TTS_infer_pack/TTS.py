@@ -39,6 +39,10 @@ from GPT_SoVITS.sv import SV
 from GPT_SoVITS.TTS_infer_pack.zero_crossing import find_matching_index, find_zero_zone
 from huggingface_hub import snapshot_download
 
+from pathlib import Path
+
+root_dir = Path(__file__).parent.parent.parent
+
 resample_transform_dict = {}
 
 
@@ -333,29 +337,29 @@ class TTS_Config:
 
         self.use_vocoder: bool = False
 
-        if (self.t2s_weights_path in [None, ""]) or (not os.path.exists(self.t2s_weights_path)):
+        if (self.t2s_weights_path in [None, ""]) or (not os.path.exists(root_dir / self.t2s_weights_path)):
             self._download_hf_weights_to_local()
             # If even after downloading the weights, the path does not exist, fall back to default weights
-            if not os.path.exists(self.t2s_weights_path):
-                self.t2s_weights_path = self.default_configs[version]["t2s_weights_path"]
+            if not os.path.exists(root_dir / self.t2s_weights_path):
+                self.t2s_weights_path = root_dir / self.default_configs[version]["t2s_weights_path"]
                 print(f"fall back to default t2s_weights_path: {self.t2s_weights_path}")
-        if (self.vits_weights_path in [None, ""]) or (not os.path.exists(self.vits_weights_path)):
+        if (self.vits_weights_path in [None, ""]) or (not os.path.exists(root_dir / self.vits_weights_path)):
             self._download_hf_weights_to_local()
             # If even after downloading the weights, the path does not exist, fall back to default weights
-            if not os.path.exists(self.vits_weights_path):
-                self.vits_weights_path = self.default_configs[version]["vits_weights_path"]
+            if not os.path.exists(root_dir / self.vits_weights_path):
+                self.vits_weights_path = root_dir / self.default_configs[version]["vits_weights_path"]
                 print(f"fall back to default vits_weights_path: {self.vits_weights_path}")
-        if (self.bert_base_path in [None, ""]) or (not os.path.exists(self.bert_base_path)):
+        if (self.bert_base_path in [None, ""]) or (not os.path.exists(root_dir / self.bert_base_path)):
             self._download_hf_weights_to_local()
             # If even after downloading the weights, the path does not exist, fall back to default weights
-            if not os.path.exists(self.bert_base_path):
-                self.bert_base_path = self.default_configs[version]["bert_base_path"]
+            if not os.path.exists(root_dir / self.bert_base_path):
+                self.bert_base_path = root_dir / self.default_configs[version]["bert_base_path"]
                 print(f"fall back to default bert_base_path: {self.bert_base_path}")
-        if (self.cnhuhbert_base_path in [None, ""]) or (not os.path.exists(self.cnhuhbert_base_path)):
+        if (self.cnhuhbert_base_path in [None, ""]) or (not os.path.exists(root_dir / self.cnhuhbert_base_path)):
             self._download_hf_weights_to_local()
             # If even after downloading the weights, the path does not exist, fall back to default weights
-            if not os.path.exists(self.cnhuhbert_base_path):
-                self.cnhuhbert_base_path = self.default_configs[version]["cnhuhbert_base_path"]
+            if not os.path.exists(root_dir / self.cnhuhbert_base_path):
+                self.cnhuhbert_base_path = root_dir / self.default_configs[version]["cnhuhbert_base_path"]
                 print(f"fall back to default cnhuhbert_base_path: {self.cnhuhbert_base_path}")
         self.update_configs()
 
@@ -488,6 +492,7 @@ class TTS:
         # self.enable_half_precision(self.configs.is_half)
 
     def init_cnhuhbert_weights(self, base_path: str):
+        base_path = str(root_dir / base_path)
         print(f"Loading CNHuBERT weights from {base_path}")
         self.cnhuhbert_model = CNHubert(base_path)
         self.cnhuhbert_model = self.cnhuhbert_model.eval()
@@ -496,6 +501,7 @@ class TTS:
             self.cnhuhbert_model = self.cnhuhbert_model.half()
 
     def init_bert_weights(self, base_path: str):
+        base_path = str(root_dir / base_path)
         print(f"Loading BERT weights from {base_path}")
         self.bert_tokenizer = AutoTokenizer.from_pretrained(base_path)
         self.bert_model = AutoModelForMaskedLM.from_pretrained(base_path)
@@ -516,6 +522,7 @@ class TTS:
             raise FileExistsError(info)
 
         # dict_s2 = torch.load(weights_path, map_location=self.configs.device,weights_only=False)
+        weights_path = str(root_dir / weights_path)
         dict_s2 = load_sovits_new(weights_path)
         hps = dict_s2["config"]
         hps["model"]["semantic_frame_rate"] = "25hz"
@@ -606,6 +613,7 @@ class TTS:
 
 
     def init_t2s_weights(self, weights_path: str):
+        weights_path = str(root_dir / weights_path)
         print(f"Loading Text2Semantic weights from {weights_path}")
         self.configs.t2s_weights_path = weights_path
         self.configs.save_configs()
