@@ -22,9 +22,10 @@ pip install git+https://github.com/spava002/GPT-SoVITS-Streaming.git
 ```
 
 **Note:** GPT-SoVITS requires NLTK data. On first use with English text, you may need to run:
+```
     import nltk
     nltk.download('averaged_perceptron_tagger_eng')
-
+```
 This is a one-time setup requirement.
 
 Ensure you are using the correct version of torch (and with cuda support if using a gpu) based on the tested environments listed below. Installations can be found [here](https://pytorch.org/get-started/previous-versions/).
